@@ -155,7 +155,6 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
 
         registerTree("Oak Apple", "橡树苹果",  "cbb311f3ba1c07c3d1147cd210d81fe11fd8ae9e3db212a0fa748946c3633", "&c", Color.FUCHSIA, "Oak Apple Juice", "橡树苹果汁", true, Material.DIRT, Material.GRASS_BLOCK);
         registerTree("Kiwi", "猕猴桃",  "4cc18ec4649f07d5a38a583d9271fd83a6f37318758e46ea87fc2b2d1afc2d9", "&a", Color.LIME, "Kiwi Juice", "猕猴桃汁", true, Material.DIRT, Material.GRASS_BLOCK);
-        registerTree("Lychee", "荔枝",  "7b18a885844c9f1dfe8d2db18b3992e3022b68acc9d19f5fe9747208c202df7", "&4", Color.RED, "Lychee Juice", "荔枝汁", true, Material.DIRT, Material.GRASS_BLOCK);
         registerTree("Coconut", "椰子", "6d27ded57b94cf715b048ef517ab3f85bef5a7be69f14b1573e14e7e42e2e8", "&6", Color.MAROON, "Coconut Milk", "椰奶", false, Material.SAND);
         registerTree("Banana", "香蕉", "20aaa1425d2b99383697d57193f27d872442bcb995508f42d19de4af1f8612", "&e", Color.YELLOW, "Bnana Juice", "香蕉汁", false, Material.SAND);
         registerTree("Durian", "榴莲", "aaa139ecc894c4e455825e313b542e2068601f2f31ab26d30cf276d51345bf3b", "&a", Color.YELLOW, "Durian Juice", "榴莲汁", false, Material.SAND);
