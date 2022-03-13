@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.thebusybiscuit</groupId>
     <artifactId>ExoticGarden</artifactId>
-    <version>UNOFFICIAL</version>
+    <version>HAIMAN</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
