@@ -8,6 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.block.Jukebox;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -45,13 +46,27 @@ public class ExoticGardenFruit extends SimpleSlimefunItem<ItemUseHandler> {
             Optional<Block> block = e.getClickedBlock();
 
             if (block.isPresent()) {
+                // Cancel the Block placement if the Player sneaks
+                if (e.getPlayer().isSneaking()) {
+                    e.cancel();
+                    return;
+                }
+
                 Material material = block.get().getType();
 
-                // Cancel the Block placement if the Player sneaks or the Block is not interactable
-                if (e.getPlayer().isSneaking() || !isInteractable(material)) {
-                    e.cancel();
-                } else {
+                // Jukebox needs special handling for this reason:
+                // https://github.com/SlimefunGuguProject/ExoticGarden/issues/21
+                if (material == Material.JUKEBOX) {
+                    Jukebox jukebox = (Jukebox) block.get().getState();
+                    if (jukebox.getPlaying() == Material.AIR) {
+                        e.cancel();
+                    }
                     return;
+                }
+
+                // Cancel the Block placement if the Block is not interactable
+                if (!isInteractable(material)) {
+                    e.cancel();
                 }
             }
 
@@ -71,7 +86,6 @@ public class ExoticGardenFruit extends SimpleSlimefunItem<ItemUseHandler> {
                 SMOKER,
                 BLAST_FURNACE,
                 JIGSAW,
-                JUKEBOX,
                 ENCHANTING_TABLE,
                 ITEM_FRAME,
                 LOOM,
