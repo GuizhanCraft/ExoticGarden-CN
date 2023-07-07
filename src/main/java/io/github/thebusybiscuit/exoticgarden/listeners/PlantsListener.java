@@ -7,6 +7,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
+import me.mrCookieSlime.Slimefun.api.BlockStorage;
 import org.bukkit.Effect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -47,7 +49,6 @@ import io.github.thebusybiscuit.slimefun4.libraries.dough.protection.Interaction
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerHead;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerSkin;
 import io.github.thebusybiscuit.slimefun4.libraries.paperlib.PaperLib;
-import me.mrCookieSlime.Slimefun.api.BlockStorage;
 
 public class PlantsListener implements Listener {
 
@@ -82,10 +83,6 @@ public class PlantsListener implements Listener {
     @EventHandler
     public void onGenerate(ChunkPopulateEvent e) {
         final World world = e.getWorld();
-
-        if (BlockStorage.getStorage(world) == null) {
-            return;
-        }
 
         if (!Slimefun.getWorldSettingsService().isWorldEnabled(world)) {
             return;
@@ -166,13 +163,13 @@ public class PlantsListener implements Listener {
     }
 
     private void growStructure(StructureGrowEvent e) {
-        SlimefunItem item = BlockStorage.check(e.getLocation().getBlock());
+        SlimefunItem item = StorageCacheUtils.getSfItem(e.getLocation());
 
         if (item != null) {
             e.setCancelled(true);
             for (Tree tree : ExoticGarden.getTrees()) {
                 if (item.getId().equalsIgnoreCase(tree.getSapling())) {
-                    BlockStorage.clearBlockInfo(e.getLocation());
+                    Slimefun.getDatabaseManager().getBlockDataController().removeBlock(e.getLocation());
                     Schematic.pasteSchematic(e.getLocation(), tree, false);
                     return;
                 }
@@ -184,7 +181,7 @@ public class PlantsListener implements Listener {
                         case BUSH -> e.getLocation().getBlock().setType(Material.OAK_LEAVES, false);
                         case ORE_PLANT, DOUBLE_PLANT -> {
                             Block blockAbove = e.getLocation().getBlock().getRelative(BlockFace.UP);
-                            item = BlockStorage.check(blockAbove);
+                            item = StorageCacheUtils.getSfItem(blockAbove.getLocation());
                             if (item != null) return;
                             if (!Tag.SAPLINGS.isTagged(blockAbove.getType()) && !Tag.LEAVES.isTagged(blockAbove.getType())) {
                                 switch (blockAbove.getType()) {
@@ -211,7 +208,7 @@ public class PlantsListener implements Listener {
                         }
                     }
 
-                    BlockStorage.deleteLocationInfoUnsafely(e.getLocation(), false);
+                    Slimefun.getDatabaseManager().getBlockDataController().removeBlock(e.getLocation());
                     BlockStorage.store(e.getLocation().getBlock(), berry.getItem());
                     e.getWorld().playEffect(e.getLocation(), Effect.STEP_SOUND, Material.OAK_LEAVES);
                     break;
@@ -321,11 +318,11 @@ public class PlantsListener implements Listener {
             return;
         }
 
-        String id = BlockStorage.checkID(e.getBlock());
+        var item = StorageCacheUtils.getSfItem(e.getBlock().getLocation());
 
-        if (id != null) {
+        if (item != null) {
             for (Berry berry : ExoticGarden.getBerries()) {
-                if (id.equalsIgnoreCase(berry.getID())) {
+                if (item.getId().equalsIgnoreCase(berry.getID())) {
                     e.setCancelled(true);
                     return;
                 }
@@ -333,12 +330,12 @@ public class PlantsListener implements Listener {
         }
 
         dropFruitFromTree(e.getBlock());
-        ItemStack item = BlockStorage.retrieve(e.getBlock());
+        ItemStack drop = BlockStorage.retrieve(e.getBlock());
 
-        if (item != null) {
+        if (drop != null) {
             e.setCancelled(true);
             e.getBlock().setType(Material.AIR, false);
-            e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), item);
+            e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), drop);
         }
     }
 
@@ -375,7 +372,7 @@ public class PlantsListener implements Listener {
     public void onBonemealPlant(BlockFertilizeEvent e) {
         Block b = e.getBlock();
         if (b.getType() == Material.OAK_SAPLING) {
-            SlimefunItem item = BlockStorage.check(b);
+            SlimefunItem item = StorageCacheUtils.getSfItem(b.getLocation());
 
             if (item instanceof BonemealableItem && ((BonemealableItem) item).isBonemealDisabled()) {
                 e.setCancelled(true);
@@ -410,11 +407,11 @@ public class PlantsListener implements Listener {
 
 
                     Location loc = fruit.getLocation();
-                    SlimefunItem check = BlockStorage.check(loc);
+                    SlimefunItem check = StorageCacheUtils.getSfItem(loc);
                     if (check == null) continue;
                     for (Tree tree : ExoticGarden.getTrees()) {
                         if (check.getId().equalsIgnoreCase(tree.getFruitID())) {
-                            BlockStorage.clearBlockInfo(loc);
+                            Slimefun.getDatabaseManager().getBlockDataController().removeBlock(loc);
                             ItemStack fruits = check.getItem();
                             fruit.getWorld().playEffect(loc, Effect.STEP_SOUND, Material.OAK_LEAVES);
                             fruit.getWorld().dropItemNaturally(loc, fruits);

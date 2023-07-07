@@ -1,5 +1,6 @@
 package io.github.thebusybiscuit.exoticgarden;
 
+import com.xzavier0722.mc.plugin.slimefun4.storage.util.StorageCacheUtils;
 import io.github.thebusybiscuit.exoticgarden.items.BonemealableItem;
 import io.github.thebusybiscuit.exoticgarden.items.Crook;
 import io.github.thebusybiscuit.exoticgarden.items.CustomFood;
@@ -371,7 +372,7 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
 
     @Nullable
     public static ItemStack harvestPlant(@Nonnull Block block) {
-        SlimefunItem item = BlockStorage.check(block);
+        SlimefunItem item = StorageCacheUtils.getSfItem(block.getLocation());
 
         if (item == null) {
             return null;
@@ -379,6 +380,7 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
 
         for (Berry berry : getBerries()) {
             if (item.getId().equalsIgnoreCase(berry.getID())) {
+                var controller = Slimefun.getDatabaseManager().getBlockDataController();
                 switch (berry.getType()) {
                     case ORE_PLANT, DOUBLE_PLANT -> {
                         Block plant = block;
@@ -391,14 +393,14 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
                         block.getWorld().playEffect(block.getLocation(), Effect.STEP_SOUND, Material.OAK_LEAVES);
                         block.setType(Material.AIR, false);
                         plant.setType(Material.OAK_SAPLING, false);
-                        BlockStorage.deleteLocationInfoUnsafely(block.getLocation(), false);
-                        BlockStorage.deleteLocationInfoUnsafely(plant.getLocation(), false);
+                        controller.removeBlock(block.getLocation());
+                        controller.removeBlock(plant.getLocation());
                         BlockStorage.store(plant, getItem(berry.toBush()));
                         return berry.getItem().clone();
                     }
                     default -> {
                         block.setType(Material.OAK_SAPLING, false);
-                        BlockStorage.deleteLocationInfoUnsafely(block.getLocation(), false);
+                        controller.removeBlock(block.getLocation());
                         BlockStorage.store(block, getItem(berry.toBush()));
                         return berry.getItem().clone();
                     }
@@ -411,14 +413,14 @@ public class ExoticGarden extends JavaPlugin implements SlimefunAddon {
 
     public void harvestFruit(Block fruit) {
         Location loc = fruit.getLocation();
-        SlimefunItem check = BlockStorage.check(loc);
+        SlimefunItem check = StorageCacheUtils.getSfItem(loc);
 
         if (check == null) {
             return;
         }
 
         if (treeFruits.contains(check.getId())) {
-            BlockStorage.clearBlockInfo(loc);
+            Slimefun.getDatabaseManager().getBlockDataController().removeBlock(loc);
             ItemStack fruits = check.getItem().clone();
             fruit.getWorld().playEffect(loc, Effect.STEP_SOUND, Material.OAK_LEAVES);
             fruit.getWorld().dropItemNaturally(loc, fruits);

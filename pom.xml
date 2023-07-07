@@ -110,9 +110,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.slimefun</groupId>
+            <groupId>com.github.StarWishsama</groupId>
             <artifactId>Slimefun4</artifactId>
-            <version>RC-31</version>
+            <version>2023.06</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
