@@ -4,9 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 
+import com.xzavier0722.mc.plugin.slimefun4.storage.controller.BlockDataController;
+import com.xzavier0722.mc.plugin.slimefun4.storage.controller.SlimefunChunkData;
+import com.xzavier0722.mc.plugin.slimefun4.storage.util.LocationUtils;
+import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -145,7 +151,7 @@ public class Schematic {
                     int blockZ = z + processedZ;
                     Block block = world.getBlockAt(blockX, blockY, blockZ);
                     Material blockType = block.getType();
-                    
+
                     if (blockType.isAir() || org.bukkit.Tag.SAPLINGS.isTagged(blockType) || (!blockType.isSolid() && !blockType.isInteractable() && !SlimefunTag.UNBREAKABLE_MATERIALS.isTagged(blockType))) {
                         Material material = parseId(blocks[index], blockData[index]);
 
@@ -154,18 +160,33 @@ public class Schematic {
                                 block.setType(material, doPhysics);
                             }
 
-                            if (org.bukkit.Tag.LEAVES.isTagged(material)) {
-                                if (ThreadLocalRandom.current().nextInt(100) < 25) {
-                                    BlockStorage.store(block, tree.getItem());
+                            BlockDataController blockDataController =
+                                    Slimefun.getDatabaseManager().getBlockDataController();
+
+                            if (org.bukkit.Tag.LEAVES.isTagged(material) && ThreadLocalRandom.current().nextInt(100) < 25) {
+                                Optional<SlimefunItem> slimefunItemOptional =
+                                        Optional.ofNullable(SlimefunItem.getByItem(tree.getItem()));
+
+                                /*
+                                 * Fix: There already a block in this location.
+                                 */
+                                try {
+                                    slimefunItemOptional.ifPresent(slimefunItem -> blockDataController.createBlock(block.getLocation(), slimefunItem.getId()));
+                                } catch (IllegalStateException illegalStateException) {
+                                    // ignore
                                 }
-                            }
-                            else if (material == Material.PLAYER_HEAD) {
+                            } else if (material == Material.PLAYER_HEAD) {
                                 Rotatable s = (Rotatable) block.getBlockData();
+
                                 s.setRotation(BLOCK_FACES[ThreadLocalRandom.current().nextInt(BLOCK_FACES.length)]);
                                 block.setBlockData(s, doPhysics);
 
                                 PlayerHead.setSkin(block, PlayerSkin.fromHashCode(tree.getTexture()), true);
-                                BlockStorage.store(block, tree.getFruit());
+
+                                Optional<SlimefunItem> slimefunItemOptional =
+                                        Optional.ofNullable(SlimefunItem.getByItem(tree.getFruit()));
+
+                                slimefunItemOptional.ifPresent(slimefunItem -> blockDataController.createBlock(block.getLocation(), slimefunItem.getId()));
                             }
                         }
                     }
@@ -176,38 +197,38 @@ public class Schematic {
 
     public static Material parseId(short blockId, byte blockData) {
         switch (blockId) {
-        case 6:
-            if (blockData == 0) return Material.OAK_SAPLING;
-            if (blockData == 1) return Material.SPRUCE_SAPLING;
-            if (blockData == 2) return Material.BIRCH_SAPLING;
-            if (blockData == 3) return Material.JUNGLE_SAPLING;
-            if (blockData == 4) return Material.ACACIA_SAPLING;
-            if (blockData == 5) return Material.DARK_OAK_SAPLING;
-            break;
-        case 17:
-            if (blockData == 0 || blockData == 4 || blockData == 8 || blockData == 12) return Material.OAK_LOG;
-            if (blockData == 1 || blockData == 5 || blockData == 9 || blockData == 13) return Material.SPRUCE_LOG;
-            if (blockData == 2 || blockData == 6 || blockData == 10 || blockData == 14) return Material.BIRCH_LOG;
-            if (blockData == 3 || blockData == 7 || blockData == 11 || blockData == 15) return Material.JUNGLE_LOG;
-            break;
-        case 18:
-            if (blockData == 0 || blockData == 4 || blockData == 8 || blockData == 12) return Material.OAK_LEAVES;
-            if (blockData == 1 || blockData == 5 || blockData == 9 || blockData == 13) return Material.SPRUCE_LEAVES;
-            if (blockData == 2 || blockData == 6 || blockData == 10 || blockData == 14) return Material.BIRCH_LEAVES;
-            if (blockData == 3 || blockData == 7 || blockData == 11 || blockData == 15) return Material.JUNGLE_LEAVES;
-            return Material.OAK_LEAVES;
-        case 161:
-            if (blockData == 0 || blockData == 4 || blockData == 8 || blockData == 12) return Material.ACACIA_LEAVES;
-            if (blockData == 1 || blockData == 5 || blockData == 9 || blockData == 13) return Material.DARK_OAK_LEAVES;
-            break;
-        case 162:
-            if (blockData == 0 || blockData == 4 || blockData == 8 || blockData == 12) return Material.ACACIA_LOG;
-            if (blockData == 1 || blockData == 5 || blockData == 9 || blockData == 13) return Material.DARK_OAK_LOG;
-            break;
-        case 144:
-            return Material.PLAYER_HEAD;
-        default:
-            return null;
+            case 6:
+                if (blockData == 0) return Material.OAK_SAPLING;
+                if (blockData == 1) return Material.SPRUCE_SAPLING;
+                if (blockData == 2) return Material.BIRCH_SAPLING;
+                if (blockData == 3) return Material.JUNGLE_SAPLING;
+                if (blockData == 4) return Material.ACACIA_SAPLING;
+                if (blockData == 5) return Material.DARK_OAK_SAPLING;
+                break;
+            case 17:
+                if (blockData == 0 || blockData == 4 || blockData == 8 || blockData == 12) return Material.OAK_LOG;
+                if (blockData == 1 || blockData == 5 || blockData == 9 || blockData == 13) return Material.SPRUCE_LOG;
+                if (blockData == 2 || blockData == 6 || blockData == 10 || blockData == 14) return Material.BIRCH_LOG;
+                if (blockData == 3 || blockData == 7 || blockData == 11 || blockData == 15) return Material.JUNGLE_LOG;
+                break;
+            case 18:
+                if (blockData == 0 || blockData == 4 || blockData == 8 || blockData == 12) return Material.OAK_LEAVES;
+                if (blockData == 1 || blockData == 5 || blockData == 9 || blockData == 13) return Material.SPRUCE_LEAVES;
+                if (blockData == 2 || blockData == 6 || blockData == 10 || blockData == 14) return Material.BIRCH_LEAVES;
+                if (blockData == 3 || blockData == 7 || blockData == 11 || blockData == 15) return Material.JUNGLE_LEAVES;
+                return Material.OAK_LEAVES;
+            case 161:
+                if (blockData == 0 || blockData == 4 || blockData == 8 || blockData == 12) return Material.ACACIA_LEAVES;
+                if (blockData == 1 || blockData == 5 || blockData == 9 || blockData == 13) return Material.DARK_OAK_LEAVES;
+                break;
+            case 162:
+                if (blockData == 0 || blockData == 4 || blockData == 8 || blockData == 12) return Material.ACACIA_LOG;
+                if (blockData == 1 || blockData == 5 || blockData == 9 || blockData == 13) return Material.DARK_OAK_LOG;
+                break;
+            case 144:
+                return Material.PLAYER_HEAD;
+            default:
+                return null;
         }
 
         return null;
