@@ -82,7 +82,7 @@ public class PlantsListener implements Listener {
 
     @EventHandler
     public void onGenerate(ChunkPopulateEvent e) {
-        if (!cfg.getBoolean("options.auto-generate-plants")) {
+        if (!cfg.getOrSetDefault("options.auto-generate-plants", true)) {
             return;
         }
 
