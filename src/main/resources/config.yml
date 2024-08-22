@@ -1,9 +1,10 @@
-grass-drops: []
+grass-drops: [ ]
 world-blacklist:
-- world_nether
-- world_the_end
+  - world_nether
+  - world_the_end
 chances:
   TREE: 22
   BUSH: 16
 options:
   auto-update: false
+  auto-generate-plants: true
